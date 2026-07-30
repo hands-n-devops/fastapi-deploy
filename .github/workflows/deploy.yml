@@ -1,0 +1,38 @@
+name: Deploy FastAPI Backend (deployment action)
+
+on:
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Select environment'
+        required: true
+        type: choice
+        options:
+          - dev
+          - uat
+          - prd
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Azure
+        uses: hands-n-devops/reusable-template/deployment@main
+        with:
+          app-type: webapp
+          app-name: test-dpr-fastapi 
+          working-directory: .
+          package-manager: uv
+          runtime: python
+          runtime-version: '3.11'
+          startup-command: python3 -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+          environment: ${{ github.event_name == 'push' && 'uat' || github.event.inputs.environment }}
+          azure-service-principal: ${{ secrets.AZURE_CREDENTIALS}}
+ 
