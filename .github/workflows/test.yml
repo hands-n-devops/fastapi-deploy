@@ -84,6 +84,7 @@ jobs:
           slot-name: ${{ env.AZURE_SLOT_NAME }}
           # Path to deploy; deploying the unzipped workspace directory
           package: .
+          startup-command: 'python -m uvicorn app.main:app --host 0.0.0.0 --port 8000'
 
       - name: Log out of Azure
         run: |
