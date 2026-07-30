@@ -1,1 +1,1 @@
-# fastapi-deploy
+# fastapi-uv-demo
