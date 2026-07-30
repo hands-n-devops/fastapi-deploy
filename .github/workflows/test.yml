@@ -3,13 +3,12 @@ name: Build and Deploy Python App to Azure App Service (Dev Slot)
 on:
   push:
     branches:
-      - feature/dev  # Or trigger on 'develop' depending on your branching strategy
-
+      - feature/dev
 
 env:
-  AZURE_WEBAPP_NAME: 'test-dpr-fastapi'  # TODO: Replace with your Azure App Service name
+  AZURE_WEBAPP_NAME: 'test-dpr-fastapi'  # TODO: Your App Service Name
   AZURE_SLOT_NAME: 'dev'                      # Target slot name
-  PYTHON_VERSION: '3.11'                      # TODO: Match your Azure App Service Python runtime
+  PYTHON_VERSION: '3.11'                      # MUST be 3.11 to match Azure Linux App Service
 
 jobs:
   build:
@@ -30,22 +29,25 @@ jobs:
         with:
           enable-cache: true
 
-      - name: Generate requirements.txt for Azure App Service
+      - name: Compile and install dependencies locally for deploy
         run: |
-          # Compile dependencies from pyproject.toml into requirements.txt
-          # Azure Oryx build engine uses this file to install packages on the slot
+          # 1. Generate requirements.txt from pyproject.toml
           uv pip compile pyproject.toml -o requirements.txt
+          
+          # 2. Install all dependencies (including uvicorn) into a local folder
+          # Using --python 3.11 ensures compatibility with Azure App Service
           uv pip install -r requirements.txt --target .python_packages/lib/site-packages
 
-      # Optional: Run automated checks/tests before packaging
-      # - name: Install dev dependencies & run tests
-      #   run: |
-      #     uv sync --dev
-      #     uv run pytest
+      - name: Remove any cached Oryx manifests or tarballs before zipping
+        run: |
+          # Ensure no stale Oryx manifests or venv tarballs ever get zipped
+          rm -f oryx-manifest.toml *.tar.gz
+          rm -rf antenv .venv
 
       - name: Create deployment artifact (Zip)
         run: |
-          zip -r release.zip ./* .python_packages/ -x "*.git*" "*.venv*" "*__pycache__*"
+          # Zip the code AND the .python_packages folder, explicitly excluding venvs
+          zip -r release.zip ./* .python_packages/ -x "*.git*" "*.venv*" "*antenv*" "*.tar.gz" "*__pycache__*"
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
@@ -83,11 +85,12 @@ jobs:
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           slot-name: ${{ env.AZURE_SLOT_NAME }}
-          # Path to deploy; deploying the unzipped workspace directory
           package: .
-          startup-command: 'python -m uvicorn app.main:app --host 0.0.0.0 --port 8000'
+          # Crucial: Wipes lingering files (like old antenv tar.gz archives) from the server
+          clean: true
+          # Crucial: Explicitly point PYTHONPATH to our bundled .python_packages folder
+          startup-command: 'PYTHONPATH=/home/site/wwwroot/.python_packages/lib/site-packages python -m uvicorn app.main:app --host 0.0.0.0 --port 8000'
 
       - name: Log out of Azure
-        run: |
-          az logout
+        run: az logout
         if: always()
