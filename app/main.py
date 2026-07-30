@@ -9,7 +9,7 @@ app = FastAPI(
 @app.get("/")
 async def root():
     return {
-        "message": "Hello from FastAPI running on Azure App Service by Vijay-v2"
+        "message": "Hello from FastAPI running on Azure App Service by Vijay-v3"
     }
 
 
