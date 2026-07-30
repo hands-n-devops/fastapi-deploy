@@ -20,8 +20,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout application
         uses: actions/checkout@v4
+        with:
+          ref: refs/heads/main
+          fetch-depth: 0
 
       - name: Deploy to Azure
         uses: hands-n-devops/reusable-template/deployment@main
