@@ -35,7 +35,7 @@ jobs:
           package-manager: uv
           runtime: python
           runtime-version: '3.11'
-          startup-command: PYTHONPATH=/home/site/wwwroot/.python_packages/lib/site-packages python3 -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+          startup-command: python3 -m uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
           environment: ${{ github.event_name == 'push' && 'uat' || github.event.inputs.environment }}
           azure-service-principal: ${{ secrets.AZURE_CREDENTIALS}}
  
