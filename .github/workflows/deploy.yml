@@ -23,7 +23,7 @@ jobs:
       - name: Checkout application
         uses: actions/checkout@v4
         with:
-          ref: refs/heads/main
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Deploy to Azure
