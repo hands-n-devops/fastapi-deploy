@@ -20,11 +20,25 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - name: Dump GitHub context
+        run: |
+          echo "Event      : ${{ github.event_name }}"
+          echo "Repository : ${{ github.repository }}"
+          echo "Ref        : ${{ github.ref }}"
+          echo "Ref Name   : ${{ github.ref_name }}"
+          echo "SHA        : ${{ github.sha }}"
+          echo "Workflow   : ${{ github.workflow }}"
+    
       - name: Checkout application
         uses: actions/checkout@v4
         with:
           ref: refs/heads/main
           fetch-depth: 0
+
+      - name: Verify checkout
+        run: |
+          git rev-parse HEAD
+          git log --oneline -5
 
       - name: Deploy to Azure
         uses: hands-n-devops/reusable-template/deployment@main
