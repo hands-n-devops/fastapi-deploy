@@ -35,6 +35,7 @@ jobs:
           # Compile dependencies from pyproject.toml into requirements.txt
           # Azure Oryx build engine uses this file to install packages on the slot
           uv pip compile pyproject.toml -o requirements.txt
+          uv pip install -r requirements.txt --target .python_packages/lib/site-packages
 
       # Optional: Run automated checks/tests before packaging
       # - name: Install dev dependencies & run tests
@@ -44,7 +45,7 @@ jobs:
 
       - name: Create deployment artifact (Zip)
         run: |
-          zip -r release.zip ./* -x "*.git*" "*.venv*" "*__pycache__*"
+          zip -r release.zip ./* .python_packages/ -x "*.git*" "*.venv*" "*__pycache__*"
 
       - name: Upload artifact for deployment
         uses: actions/upload-artifact@v4
